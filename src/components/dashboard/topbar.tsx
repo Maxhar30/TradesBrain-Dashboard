@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
+import { getInitials } from "@/lib/utils";
 import {
   Bell,
   Menu,
@@ -34,6 +36,7 @@ const navItems = [
 export function Topbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
+  const { user, logout } = useAuth();
 
   return (
     <>
@@ -63,7 +66,9 @@ export function Topbar() {
             </span>
           </button>
           <Avatar className="h-8 w-8">
-            <AvatarFallback className="text-xs">MH</AvatarFallback>
+            <AvatarFallback className="text-xs">
+              {user ? getInitials(user.name) : "?"}
+            </AvatarFallback>
           </Avatar>
         </div>
       </header>
@@ -114,7 +119,8 @@ export function Topbar() {
             </nav>
             <div className="px-3 py-4 border-t border-[#1E3A5F]">
               <Link
-                href="/login"
+                href="#"
+                onClick={(e) => { e.preventDefault(); logout(); }}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:bg-[#1E3A5F] hover:text-white transition-colors"
               >
                 <LogOut className="h-5 w-5 shrink-0" />

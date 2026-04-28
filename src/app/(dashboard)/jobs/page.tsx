@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ import { formatDate, formatCurrency } from "@/lib/utils";
 import { type Job } from "@/types";
 import { JobCard } from "@/components/dashboard/job-card";
 import { NewJobDialog } from "@/components/dashboard/new-job-dialog";
+import { useJobUpdates, type JobUpdatedPayload } from "@/hooks/use-job-updates";
 
 const MOCK_JOBS: Job[] = [
   {
@@ -137,9 +138,26 @@ export default function JobsPage() {
   const [priority, setPriority] = useState("all");
   const [view, setView] = useState<"board" | "list">("board");
   const [newJobOpen, setNewJobOpen] = useState(false);
+  const [jobs, setJobs] = useState<Job[]>(MOCK_JOBS);
+
+  useJobUpdates({
+    onJobUpdated: useCallback((payload: JobUpdatedPayload) => {
+      setJobs((prev) =>
+        prev.map((j) =>
+          j.id === payload.id ? { ...j, ...payload } : j
+        )
+      );
+    }, []),
+    onJobCreated: useCallback((job: Job) => {
+      setJobs((prev) => [job, ...prev]);
+    }, []),
+    onJobDeleted: useCallback((id: string) => {
+      setJobs((prev) => prev.filter((j) => j.id !== id));
+    }, []),
+  });
 
   const filteredJobs = (status: string) =>
-    MOCK_JOBS.filter((j) => {
+    jobs.filter((j) => {
       const matchStatus = status === "all" || j.status === status;
       const matchSearch =
         !search ||
@@ -154,7 +172,7 @@ export default function JobsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-[#0C2340]">Jobs</h1>
-          <p className="text-sm text-[#64748B]">{MOCK_JOBS.length} total jobs</p>
+          <p className="text-sm text-[#64748B]">{jobs.length} total jobs</p>
         </div>
         <Button onClick={() => setNewJobOpen(true)} className="sm:self-start">
           <Plus className="h-4 w-4 mr-2" />

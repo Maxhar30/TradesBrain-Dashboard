@@ -1,6 +1,8 @@
+import { getAuthToken } from "@/lib/cookies";
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "https://api.tradesbrain.io";
 
-class ApiError extends Error {
+export class ApiError extends Error {
   constructor(
     public status: number,
     message: string
@@ -10,17 +12,25 @@ class ApiError extends Error {
   }
 }
 
-async function request<T>(
-  path: string,
-  options?: RequestInit
-): Promise<T> {
+function authHeaders(): Record<string, string> {
+  const token = getAuthToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     headers: {
       "Content-Type": "application/json",
+      ...authHeaders(),
       ...options?.headers,
     },
     ...options,
   });
+
+  if (res.status === 401) {
+    // Let the middleware handle the redirect via cookie expiry
+    throw new ApiError(401, "Unauthorized");
+  }
 
   if (!res.ok) {
     throw new ApiError(res.status, `API error: ${res.statusText}`);
