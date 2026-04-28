@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Wrench, Loader2 } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
+import { ApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,7 +18,7 @@ import {
 } from "@/components/ui/card";
 
 export default function RegisterPage() {
-  const router = useRouter();
+  const { register } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [form, setForm] = useState({
@@ -38,11 +39,19 @@ export default function RegisterPage() {
     }
     setLoading(true);
     try {
-      // TODO: wire to POST /auth/register on api.tradesbrain.io
-      await new Promise((r) => setTimeout(r, 800));
-      router.push("/dashboard");
-    } catch {
-      setError("Registration failed. Please try again.");
+      await register({
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        password: form.password,
+        companyName: form.companyName,
+      });
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 409) {
+        setError("An account with that email already exists.");
+      } else {
+        setError("Registration failed. Please try again.");
+      }
     } finally {
       setLoading(false);
     }

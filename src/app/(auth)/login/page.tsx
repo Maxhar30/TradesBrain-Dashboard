@@ -2,15 +2,23 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Wrench, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useAuth } from "@/lib/auth-context";
+import { ApiError } from "@/lib/api";
 
 export default function LoginPage() {
-  const router = useRouter();
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -21,11 +29,13 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      // TODO: wire to POST /auth/login on api.tradesbrain.io
-      await new Promise((r) => setTimeout(r, 800));
-      router.push("/dashboard");
-    } catch {
-      setError("Invalid email or password.");
+      await login(form.email, form.password);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        setError("Invalid email or password.");
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -82,7 +92,9 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   required
                   value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, password: e.target.value })
+                  }
                   className="pr-10"
                 />
                 <button
@@ -90,7 +102,11 @@ export default function LoginPage() {
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748B] hover:text-[#0C2340]"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
             </div>
@@ -103,7 +119,10 @@ export default function LoginPage() {
         <CardFooter>
           <p className="text-sm text-[#64748B] text-center w-full">
             Don&apos;t have an account?{" "}
-            <Link href="/register" className="text-[#F97316] hover:underline font-medium">
+            <Link
+              href="/register"
+              className="text-[#F97316] hover:underline font-medium"
+            >
               Sign up
             </Link>
           </p>

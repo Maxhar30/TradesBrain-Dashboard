@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
 import {
   Briefcase,
   Phone,
@@ -27,6 +28,7 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { logout } = useAuth();
 
   return (
     <aside className="hidden md:flex flex-col w-64 min-h-screen bg-[#0C2340] text-white">
@@ -60,13 +62,13 @@ export function Sidebar() {
       </nav>
 
       <div className="px-3 py-4 border-t border-[#1E3A5F]">
-        <Link
-          href="/login"
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:bg-[#1E3A5F] hover:text-white transition-colors"
+        <button
+          onClick={logout}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:bg-[#1E3A5F] hover:text-white transition-colors"
         >
           <LogOut className="h-5 w-5 shrink-0" />
           Sign Out
-        </Link>
+        </button>
       </div>
     </aside>
   );
